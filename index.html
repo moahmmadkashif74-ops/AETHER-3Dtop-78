@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aether3D - High-Converting 3D Website Agency</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', 'sans-serif'],
+          },
+          animation: {
+            'spin-slow': 'spin 12s linear infinite',
+            'bounce-slow': 'bounce 3s infinite',
+            'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+            'fadeIn': 'fadeIn 0.3s ease-out forwards',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+              '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'scale(0.97)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- React 18, ReactDOM, and Babel Standalone CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar & Aesthetics */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #080b11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 5px;
+      border: 2px solid #080b11;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    body {
+      background-color: #080b11;
+      color: #f8fafc;
+      overflow-x: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-[#080b11] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <div id="root"></div>
+
+  <!-- Main Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- SVG Icon Dictionary ---
+    const Icon = ({ name, className = "w-5 h-5", style = {} }) => {
+      const icons = {
+        Sparkles: <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />,
+        Box: <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z M3.27 6.96 12 12.01l8.73-5.05 M12 22.08V12" />,
+        Zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />,
+        Building2: <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2 M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2 M10 6h4 M10 10h4 M10 14h4 M10 18h4" />,
+        ShoppingBag: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z M3 6h18 M16 10a4 4 0 0 1-8 0" />,
+        Utensils: <path d="M18 2v20 M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm-13 7V2 M4 2v6a4 4 0 0 0 4 4V2 M8 2v10" />,
+        Hotel: <path d="M10 22v-65a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v65 M2 22h20 M7 11h2 M7 15h2 M7 19h2 M15 11h2 M15 15h2 M15 19h2" />,
+        Dumbbell: <path d="m6.5 6.5 11 11 M21 21l-1-1 M3 3l1 1 M18 22l4-4 M2 6l4-4 M3 10l7-7 M14 21l7-7" />,
+        GraduationCap: <path d="M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5" />,
+        Stethoscope: <path d="M4.8 2.3A.3.3 0 0 0 5 2.6V10a5 5 0 0 0 10 0V2.6a.3.3 0 0 0 .2-.3V2a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1v.3 M10 15a5 5 0 0 0 5 5h2a3 3 0 0 0 3-3v-2 M11 2h2" />,
+        Scissors: <path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm14.8-13.8L8.1 12.7M8.1 11.3l12.7 5.5" />,
+        Bot: <path d="M12 8V4H8 M2 14h2 M20 14h2 M15 13v2 M9 13v2 M5 8h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z" />,
+        TrendingUp: <path d="m22 7-8.5 8.5-5-5L1 18 M16 7h6v6" />,
+        CheckCircle2: <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M9 12l2 2 4-4" />,
+        Check: <path d="M20 6 9 17l-5-5" />,
+        ArrowRight: <path d="M5 12h14 M12 5l7 7-7 7" />,
+        ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4" />,
+        Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+        PhoneCall: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z M15 2a6 6 0 0 1 6 6 M15 6a2 2 0 0 1 2 2" />,
+        Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
+        MessageCircle: <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />,
+        Menu: <path d="M4 12h16 M4 6h16 M4 18h16" />,
+        X: <path d="M18 6 6 18 M6 6l12 12" />,
+        ChevronRight: <path d="m9 18 6-6-6-6" />,
+        ChevronDown: <path d="m6 9 6 6 6-6" />,
+        Calendar: <rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><path d="M16 2v4 M8 2v4 M3 10h18" />,
+        Inbox: <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />,
+        Lock: <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />,
+        Unlock: <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" />,
+        Mail: <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />,
+        MapPin: <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />,
+        Clock: <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />,
+        Crown: <path d="m2 4 3 12h14l3-12-6 7-4-8-4 8-6-7z" />,
+        Star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+        Trash2: <path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2 M10 11v6 M14 11v6" />,
+        ExternalLink: <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14 21 3" />,
+        RefreshCw: <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16 M8 16H3v5" />,
+        KeyRound: <path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />,
+        Smartphone: <rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" />,
+        Award: <circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+      };
+
+      const path = icons[name] || icons.Sparkles;
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          style={style}
+        >
+          {path}
+        </svg>
+      );
+    };
+
+    // --- DATA ---
+    const SERVICES_DATA = [
+      {
+        id: 'business-website',
+        title: 'Business Website',
+        tagline: 'High-Converting Corporate & Local Service Sites',
+        description: 'Custom corporate and local service websites crafted with 3D interactive elements, instant lead triggers, and local Google SEO domination.',
+        iconName: 'Building2',
+        features: ['3D Interactive Hero Section', 'Instant Lead Capture Widgets', 'Google Maps Rank #1 Setup', 'CRM & WhatsApp Integration'],
+        conversionLift: '+240% Leads',
+        badgeText: 'Most Requested',
+        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'ecommerce-website',
+        title: 'E-commerce Website',
+        tagline: '3D Product Showcases & Fast Checkout Engine',
+        description: 'Transform online buyers with 360-degree 3D interactive product viewers, one-click checkout, and instant automated upsells.',
+        iconName: 'ShoppingBag',
+        features: ['3D 360° Product Viewer', 'Apple Pay & Stripe Integration', 'Abandoned Cart SMS Recovery', 'Lightning Fast 1s Load'],
+        conversionLift: '+310% Sales',
+        badgeText: 'High ROI',
+        image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'restaurant-website',
+        title: 'Restaurant Website',
+        tagline: 'Mouth-Watering 3D Menus & Table Bookings',
+        description: 'Attract food lovers with interactive 3D dish previews, commission-free online food ordering, and instant table reservations.',
+        iconName: 'Utensils',
+        features: ['Interactive 3D Visual Menu', 'Zero-Commission Delivery Engine', 'OpenTable/Direct Reservation', 'QR Code Smart Menu'],
+        conversionLift: '+180% Orders',
+        badgeText: 'Popular',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'hotel-website',
+        title: 'Hotel Website',
+        tagline: 'Direct Booking Engine with 3D Room Previews',
+        description: 'Eliminate OTA commissions with immersive 3D virtual room tours, live availability calendars, and luxury guest booking portals.',
+        iconName: 'Hotel',
+        features: ['Interactive 3D Room Walkthrough', 'Direct Booking Motor', 'Multi-Language Support', 'WhatsApp Concierge Bot'],
+        conversionLift: '+290% Direct Bookings',
+        badgeText: 'Luxury Standard',
+        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'gym-website',
+        title: 'Gym Website',
+        tagline: 'Membership Conversion & Class Schedulers',
+        description: 'Turn visitors into gym members with high-energy 3D fitness previews, free trial pass triggers, and trainer booking calendars.',
+        iconName: 'Dumbbell',
+        features: ['3D Facility Walkthrough', 'Instant Free Trial Claim Form', 'Class Schedule & Trainer Booking', 'Member Portal Integration'],
+        conversionLift: '+350% Member Signups',
+        badgeText: 'High Conversion',
+        image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'school-website',
+        title: 'School Website',
+        tagline: 'Trust-Building Educational & Enrollment Portals',
+        description: 'Inspire parents and prospective students with interactive 3D campus tours, digital enrollment forms, and event hubs.',
+        iconName: 'GraduationCap',
+        features: ['3D Campus Tour Canvas', 'Online Admissions Application', 'Parent & Student Dashboard', 'Notice Board & Calendar'],
+        conversionLift: '+190% Admissions',
+        badgeText: 'Trusted Quality',
+        image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'doctor-website',
+        title: 'Doctor Website',
+        tagline: 'HIPAA-Compliant Patient Booking & Trust Engine',
+        description: 'Build supreme patient trust with 3D clinic tours, verified patient reviews, instant appointment booking, and tele-consultation.',
+        iconName: 'Stethoscope',
+        features: ['3D Treatment Explanation Modules', '24/7 Smart Appointment Scheduler', 'HIPAA Compliant Security', 'Patient Review Badge Wall'],
+        conversionLift: '+260% Patient Calls',
+        badgeText: 'Verified Trust',
+        image: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'salon-website',
+        title: 'Salon Website',
+        tagline: 'Elegant Styling Portfolios & Instant Booking',
+        description: 'Fill your appointment book with 3D haircut & spa visualizers, instant stylist selection, and automated SMS appointment reminders.',
+        iconName: 'Scissors',
+        features: ['3D Hairstyle & Lash Portfolio', 'Choose Your Stylist Booking', 'Deposit Payment Lock', 'Automated SMS Reminders'],
+        conversionLift: '+320% Appointments',
+        badgeText: 'Trending',
+        image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'ai-automation',
+        title: 'AI Automation',
+        tagline: '24/7 AI Lead Chatbots & CRM Auto-Followups',
+        description: 'Never lose a lead again. Integrate Gemini-powered 3D AI chat assistants that answer customer questions, schedule calls, and close sales 24/7.',
+        iconName: 'Bot',
+        features: ['Custom Gemini AI Trained Bot', 'Instant Lead Qualification', 'WhatsApp & SMS Auto-Responder', 'Automated Lead Nurture CRM'],
+        conversionLift: '+420% Lead Retention',
+        badgeText: 'Next-Gen AI',
+        image: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'seo',
+        title: 'Local SEO Dominance',
+        tagline: 'Google Maps #1 Ranking & Local organic leads',
+        description: 'Dominating local search results with hyper-targeted local schema, Google Maps optimization, and lightning speed optimization.',
+        iconName: 'TrendingUp',
+        features: ['Google Business Profile #1 Boost', 'Hyper-Local Keyword Targeting', 'Automated 5-Star Review Engine', 'Monthly Ranking Reports'],
+        conversionLift: '+500% Organic Traffic',
+        badgeText: 'Rank #1 Guarantee',
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80'
+      }
+    ];
+
+    const PORTFOLIO_DATA = [
+      {
+        id: 'port-1',
+        title: 'Apex Dental Care & Implant Center',
+        category: 'Medical & Salon',
+        businessType: 'Dental Clinic',
+        clientLocation: 'Chicago, IL',
+        metrics: { leadIncrease: '+320%', pageSpeed: 99, revenueGrowth: '$140k/mo' },
+        desktopImage: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80',
+        description: 'Designed a luxurious 3D dental studio website with interactive treatment guides, direct appointment scheduling, and live review tickers.',
+        key3DFeatures: ['3D Smile Simulator', 'Interactive Implant Tour', 'Instant Doctor Consultation Popup'],
+        testimonial: {
+          quote: "Within 30 days of launching our new Aether3D website, our new patient bookings tripled! It looks like a futuristic $50,000 site.",
+          author: 'Dr. Michael Sterling',
+          role: 'Founder & Chief Surgeon'
+        }
+      },
+      {
+        id: 'port-2',
+        title: 'Bella Vista Italian Bistro',
+        category: 'Hospitality',
+        businessType: 'Fine Dining Restaurant',
+        clientLocation: 'Miami, FL',
+        metrics: { leadIncrease: '+280%', pageSpeed: 98, revenueGrowth: '+190% Orders' },
+        desktopImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+        description: '3D interactive menu experience with real-time dish showcases, commission-free online food ordering, and table reservation engine.',
+        key3DFeatures: ['3D Dish Inspector', 'Instant Table Picker', 'VIP Dining Club Trigger'],
+        testimonial: {
+          quote: "Our weekend table reservations are completely booked weeks in advance now. The 3D menu concept blew our guests away!",
+          author: 'Chef Giovanni Ross',
+          role: 'Head Chef & Owner'
+        }
+      },
+      {
+        id: 'port-3',
+        title: 'IronVault Athletic Club',
+        category: 'Fitness & School',
+        businessType: 'Gym & Crossfit Center',
+        clientLocation: 'Austin, TX',
+        metrics: { leadIncrease: '+410%', pageSpeed: 100, revenueGrowth: '240 New Members' },
+        desktopImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
+        description: 'High-energy 3D fitness hub featuring 3D virtual gym walk-through, free pass claim form, and trainer schedule picker.',
+        key3DFeatures: ['3D Gym Floor Map', 'Instant Free Day Pass Claim', 'Trainer Booking Carousel'],
+        testimonial: {
+          quote: "We got 240 paid signups in our first month after launch. Aether3D is hands down the best web agency for local businesses.",
+          author: 'Marcus Vance',
+          role: 'General Manager'
+        }
+      },
+      {
+        id: 'port-4',
+        title: 'Luxe Aura Hair & Spa Lounge',
+        category: 'Medical & Salon',
+        businessType: 'Luxury Hair Salon',
+        clientLocation: 'New York, NY',
+        metrics: { leadIncrease: '+350%', pageSpeed: 99, revenueGrowth: '$85k/mo' },
+        desktopImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80',
+        description: 'Ultra-chic 3D salon showcase with interactive hairstyle portfolios, stylist selection, and automated deposit payment lock.',
+        key3DFeatures: ['3D Style Lookbook', 'Stylist Direct Booking', 'Automated SMS Reminder Lock'],
+        testimonial: {
+          quote: "Our clients constantly compliment our website. It positions us as the #1 salon in Manhattan and fills our chairs daily.",
+          author: 'Elena Rostova',
+          role: 'Lead Stylist & Founder'
+        }
+      }
+    ];
+
+    const BEFORE_AFTER_CASES = [
+      {
+        id: 'ba-1',
+        clientName: 'Metro HVAC & Plumbing Services',
+        industry: 'Local Home Services',
+        oldWebsite: {
+          title: 'Legacy 2018 WordPress Site',
+          speedScore: 28,
+          monthlyLeads: 14,
+          bounceRate: '76%',
+          image: 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=800&q=80',
+          cons: ['Slow load time (7.2s)', 'Cluttered text with no clear CTA', 'Not mobile friendly']
+        },
+        newWebsite: {
+          title: 'Aether 3D High-Converting Site',
+          speedScore: 99,
+          monthlyLeads: 82,
+          bounceRate: '21%',
+          image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
+          pros: ['1.1s instant load speed', '3D Emergency Click-to-Call trigger', 'Google Maps Rank #1 badge']
+        },
+        growthMultiplier: '5.8x More Monthly Leads'
+      },
+      {
+        id: 'ba-2',
+        clientName: 'Summit Law Group',
+        industry: 'Legal Services',
+        oldWebsite: {
+          title: 'Outdated Generic Template',
+          speedScore: 34,
+          monthlyLeads: 9,
+          bounceRate: '82%',
+          image: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80',
+          cons: ['Outdated design distrusted by clients', 'Static contact form hidden at bottom']
+        },
+        newWebsite: {
+          title: 'Aether 3D Legal Authority Portal',
+          speedScore: 100,
+          monthlyLeads: 48,
+          bounceRate: '19%',
+          image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+          pros: ['Premium high-trust aesthetic', 'AI Case Evaluation Bot', 'Instant phone consultation trigger']
+        },
+        growthMultiplier: '5.3x Retainer Growth'
+      }
+    ];
+
+    const FAQ_DATA = [
+      {
+        question: 'How fast can you build and launch my new website?',
+        answer: 'We deliver full 3D interactive websites in as little as 7 to 14 business days! Our express turn-around process ensures your local business starts generating leads immediately.'
+      },
+      {
+        question: 'Will my website work smoothly on all mobile phones?',
+        answer: 'Absolutely! Every Aether3D website is built mobile-first. Our 3D models and particle effects automatically optimize for iOS, Android, tablets, and desktop browsers for seamless 60fps performance.'
+      },
+      {
+        question: 'How does the 100% Money-Back Guarantee work?',
+        answer: 'If you are not 100% thrilled with your website initial 3D design concept within the first 14 days, we will refund every single penny—no questions asked and zero risk to you.'
+      },
+      {
+        question: 'Will my website rank #1 on Google for local keywords?',
+        answer: 'Yes. Every project includes full local SEO optimization, Google Business Profile integration, schema markup, speed optimization, and keyword targeting to help you dominate your local market.'
+      },
+      {
+        question: 'Do you offer free plans or free website tiers?',
+        answer: 'No, we do not offer free plans. Every website we build is 100% custom-crafted, high-performing, and dedicated to generating real business leads. We offer affordable paid packages starting at ₹5,000 / $55 with transparent flat-rate or monthly subscription options.'
+      }
+    ];
+
+    // --- Toast Notification ---
+    const ToastNotification = ({ show, onClose, title, message, email }) => {
+      if (!show) return null;
+      return (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md w-full bg-slate-900 border-2 border-emerald-500 rounded-2xl p-5 shadow-[0_10px_30px_rgba(16,185,129,0.3)] text-white animate-fadeIn">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shrink-0">
+              <Icon name="CheckCircle2" className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-base font-extrabold text-white">{title}</h4>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">{message}</p>
+              {email && (
+                <div className="mt-2 p-2 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-bold text-sky-400 truncate">
+                  Sent to: {email}
+                </div>
+              )}
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-white p-1">
+              <Icon name="X" className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // --- 3D Laptop Canvas ---
+    const ThreeLaptopCanvas = () => {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        let width = (canvas.width = canvas.offsetWidth);
+        let height = (canvas.height = canvas.offsetHeight);
+
+        const handleResize = () => {
+          if (!canvas) return;
+          width = canvas.width = canvas.offsetWidth;
+          height = canvas.height = canvas.offsetHeight;
+        };
+        window.addEventListener('resize', handleResize);
+
+        let angle = 0;
+
+        const render = () => {
+          ctx.clearRect(0, 0, width, height);
+          angle += 0.015;
+
+          const centerX = width / 2;
+          const centerY = height / 2;
+
+          // Glowing Background Mesh
+          const grad = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.max(width, height) / 1.5);
+          grad.addColorStop(0, 'rgba(99, 102, 241, 0.15)');
+          grad.addColorStop(0.5, 'rgba(14, 165, 233, 0.08)');
+          grad.addColorStop(1, 'rgba(8, 11, 17, 0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, height);
+
+          // Render 3D Floating Devices / Laptops
+          const devices = [
+            { scale: 1.1, xOffset: 0, yOffset: Math.sin(angle) * 15, title: '3D High-Converting Web Engine' },
+            { scale: 0.75, xOffset: -width * 0.28, yOffset: Math.cos(angle * 0.9) * 12 + 20, title: '3D Mobile App' },
+            { scale: 0.75, xOffset: width * 0.28, yOffset: Math.sin(angle * 1.1) * 12 + 20, title: '3D AI Chatbot' },
+          ];
+
+          devices.forEach((dev) => {
+            const dx = centerX + dev.xOffset;
+            const dy = centerY + dev.yOffset;
+            const w = 260 * dev.scale;
+            const h = 160 * dev.scale;
+
+            // Device Glass Screen
+            ctx.save();
+            ctx.translate(dx, dy);
+
+            // Screen Outline
+            ctx.shadowColor = 'rgba(99, 102, 241, 0.4)';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2 * dev.scale;
+
+            ctx.beginPath();
+            ctx.roundRect(-w / 2, -h / 2, w, h, 12 * dev.scale);
+            ctx.fill();
+            ctx.stroke();
+
+            // Screen Content Mockup
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(-w / 2 + 10, -h / 2 + 10, w - 20, h - 30);
+
+            // Glowing Lines
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(-w / 2 + 20, -h / 2 + 25, w * 0.4, 8 * dev.scale);
+            ctx.fillStyle = '#818cf8';
+            ctx.fillRect(-w / 2 + 20, -h / 2 + 40, w * 0.6, 6 * dev.scale);
+
+            // Device Base Keyboard
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.roundRect(-w / 2 - 20 * dev.scale, h / 2 - 5, w + 40 * dev.scale, 12 * dev.scale, 4);
+            ctx.fill();
+
+            ctx.restore();
+          });
+
+          animationFrameId = requestAnimationFrame(render);
+        };
+
+        render();
+
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, []);
+
+      return <canvas ref={canvasRef} className="w-full h-full absolute inset-0 pointer-events-none" />;
+    };
+
+    // --- Header ---
+    const Header = ({ onOpenProposal, onOpenInbox, leadCount = 0 }) => {
+      const [isScrolled, setIsScrolled] = useState(false);
+      const [mobileOpen, setMobileOpen] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      return (
+        <header className="fixed top-0 left-0 right-0 z-40 transition-all">
+          {/* Top Ticker */}
+          <div className="bg-gradient-to-r from-slate-950 via-slate-800 to-zinc-950 text-slate-100 text-[11px] sm:text-xs py-1.5 px-4 text-center font-bold flex items-center justify-center gap-2 border-b border-slate-700/60 shadow-md">
+            <Icon name="Sparkles" className="w-3.5 h-3.5 text-slate-200 animate-pulse shrink-0" />
+            <span>
+              <strong className="text-white uppercase tracking-wider">Limited Offer:</strong> Get a Free $500 Local SEO Strategy & Google Maps Rank Setup!
+            </span>
+            <button onClick={onOpenProposal} className="underline hover:text-white font-black ml-1 hidden sm:inline-block cursor-pointer">
+              Claim Offer &rarr;
+            </button>
+          </div>
+
+          {/* Main Navbar */}
+          <div className={`w-full transition-all ${isScrolled ? 'bg-slate-950/90 backdrop-blur-xl border-b border-slate-700/70 py-3 shadow-2xl' : 'bg-transparent py-4'}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+              
+              {/* Logo */}
+              <div className="flex items-center gap-3">
+                <a href="#" className="flex items-center gap-2.5 group">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-100 via-slate-300 to-zinc-400 p-0.5 shadow-lg group-hover:scale-105 transition-transform">
+                    <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                      <Icon name="Box" className="w-5 h-5 text-slate-200" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-black tracking-tight text-white">
+                      AETHER<span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-400">3D</span>
+                    </span>
+                    <span className="text-[10px] tracking-widest uppercase font-black text-slate-400">Luxury Web Studio</span>
+                  </div>
+                </a>
+
+                {/* Submissions Inbox Button */}
+                <button
+                  onClick={onOpenInbox}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-indigo-500/40 text-indigo-300 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                  title="View Submitted Forms & Leads"
+                >
+                  <Icon name="Inbox" className="w-4 h-4 text-indigo-400" />
+                  <span className="hidden md:inline-block">Submissions</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-200 text-[10px] font-black">{leadCount}</span>
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <nav className="hidden xl:flex items-center gap-6 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <a href="#services" className="hover:text-white transition-colors">Services</a>
+                <a href="#portfolio" className="hover:text-white transition-colors">Portfolio</a>
+                <a href="#before-after" className="hover:text-white transition-colors">Case Studies</a>
+                <a href="#why-us" className="hover:text-white transition-colors">Why Choose Us</a>
+                <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+                <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+              </nav>
+
+              {/* CTAs */}
+              <div className="hidden sm:flex items-center gap-3">
+                <a
+                  href="https://wa.me/917000073706?text=Hi%20Aether3D!%20I%20want%20a%20free%20website%20consultation."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700/80 text-slate-200 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-800 transition-all"
+                >
+                  <Icon name="MessageCircle" className="w-4 h-4 text-emerald-400" />
+                  <span>+91 70000 73706</span>
+                </a>
+
+                <button
+                  onClick={onOpenProposal}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 text-slate-950 font-black text-xs shadow-lg hover:shadow-white/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Icon name="Sparkles" className="w-3.5 h-3.5 text-slate-950" />
+                  <span>Get Free Proposal</span>
+                </button>
+              </div>
+
+              {/* Mobile Menu Icon */}
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="xl:hidden p-2 rounded-xl bg-slate-900 text-slate-300">
+                <Icon name={mobileOpen ? "X" : "Menu"} className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Menu Drawer */}
+          {mobileOpen && (
+            <div className="xl:hidden bg-slate-950/95 border-b border-slate-800 p-6 backdrop-blur-xl animate-fadeIn space-y-4">
+              <nav className="flex flex-col gap-3 font-semibold text-sm">
+                <a href="#services" onClick={() => setMobileOpen(false)}>Services</a>
+                <a href="#portfolio" onClick={() => setMobileOpen(false)}>Portfolio</a>
+                <a href="#before-after" onClick={() => setMobileOpen(false)}>Case Studies</a>
+                <a href="#pricing" onClick={() => setMobileOpen(false)}>Pricing</a>
+                <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
+              </nav>
+              <button
+                onClick={() => { setMobileOpen(false); onOpenProposal(); }}
+                className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+              >
+                <Icon name="Sparkles" className="w-4 h-4" />
+                <span>Get Free Proposal</span>
+              </button>
+            </div>
+          )}
+        </header>
+      );
+    };
+
+    // --- Hero Lead Form ---
+    const HeroLeadForm = ({ onSubmitted }) => {
+      const [formData, setFormData] = useState({
+        name: '',
+        businessName: '',
+        phone: '',
+        email: '',
+        businessType: 'Business Website',
+        websiteUrl: ''
+      });
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+          await fetch('https://formsubmit.co/ajax/moahmmadkashif74@gmail.com', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              "Client Name": formData.name,
+              "Business Name": formData.businessName,
+              "Phone Number": formData.phone,
+              "Email Address": formData.email,
+              "Business Type": formData.businessType,
+              "Existing Website": formData.websiteUrl || 'None',
+              "Form Location": "Hero Section Proposal Form",
+              _subject: `🔥 New Hero Lead: ${formData.businessName} - ${formData.name} (${formData.phone})`,
+              _cc: "mr.premsagar78@gmail.com,rk6136561@gmail.com",
+              _captcha: 'false',
+              _template: 'table'
+            })
+          });
+
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          onSubmitted(formData);
+
+          setFormData({ name: '', businessName: '', phone: '', email: '', businessType: 'Business Website', websiteUrl: '' });
+        } catch (err) {
+          console.error(err);
+          onSubmitted(formData);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="relative bg-slate-900/90 border border-slate-700/80 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">
+              <Icon name="Sparkles" className="w-3.5 h-3.5 text-indigo-400" />
+              Fast 60-Second Website Quote
+            </div>
+            <h3 className="text-xl md:text-2xl font-black text-white">Get Custom Website Proposal</h3>
+            <p className="text-xs text-slate-400 mt-1">Generate 3x more inquiries & sales for your local business.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Your Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. John Miller"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Business Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Miller Dental Studio"
+                  value={formData.businessName}
+                  onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Phone Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="(555) 000-0000"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="john@yourbusiness.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">Business Industry *</label>
+              <select
+                value={formData.businessType}
+                onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="Business Website">Business Website</option>
+                <option value="E-commerce Website">E-commerce Website</option>
+                <option value="Restaurant Website">Restaurant Website</option>
+                <option value="Hotel Website">Hotel Website</option>
+                <option value="Gym Website">Gym Website</option>
+                <option value="Doctor Website">Doctor Website</option>
+                <option value="Salon Website">Salon Website</option>
+                <option value="AI Automation">AI Automation</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-500 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              {loading ? (
+                <span>Submitting Proposal Request...</span>
+              ) : (
+                <>
+                  <Icon name="Zap" className="w-4 h-4 text-amber-300" />
+                  <span>Get Custom Website Proposal</span>
+                  <Icon name="ArrowRight" className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-around text-[10px] text-slate-400">
+            <span className="flex items-center gap-1"><Icon name="ShieldCheck" className="w-3.5 h-3.5 text-emerald-400" /> Paid Custom Packages</span>
+            <span className="flex items-center gap-1"><Icon name="Clock" className="w-3.5 h-3.5 text-indigo-400" /> 15-Min Response</span>
+          </div>
+        </div>
+      );
+    };
+
+    // --- Hero Section ---
+    const HeroSection = ({ onOpenProposal, onFormSubmitted }) => {
+      return (
+        <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-[#080b11]">
+          <ThreeLaptopCanvas />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              
+              {/* Left Headline */}
+              <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 border border-slate-700 text-slate-200 text-xs font-bold uppercase tracking-widest shadow-md">
+                  <Icon name="Crown" className="w-4 h-4 text-amber-400" />
+                  #1 Luxury 3D Web Agency for Businesses
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-none">
+                  Turn Visitors Into Paying Customers With <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-indigo-300 to-emerald-300">3D Interactive Websites</span>
+                </h1>
+
+                <p className="text-slate-300 text-base sm:text-lg max-w-2xl font-medium leading-relaxed">
+                  We craft ultra-fast, high-converting 3D websites equipped with instant lead forms, Google Maps #1 SEO setups, and 24/7 AI assistants that generate 3x more calls and bookings.
+                </p>
+
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800 max-w-lg mx-auto lg:mx-0">
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-400">+310%</div>
+                    <div className="text-[11px] text-slate-400 font-semibold uppercase">Avg Lead Growth</div>
+                  </div>
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl sm:text-3xl font-black text-sky-400">1.1s</div>
+                    <div className="text-[11px] text-slate-400 font-semibold uppercase">Load Speed</div>
+                  </div>
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl sm:text-3xl font-black text-amber-400">100%</div>
+                    <div className="text-[11px] text-slate-400 font-semibold uppercase">Money-Back Guarantee</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Form */}
+              <div className="lg:col-span-5">
+                <HeroLeadForm onSubmitted={onFormSubmitted} />
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    // --- Services Grid ---
+    const ServicesGrid = ({ onSelectService }) => {
+      return (
+        <section id="services" className="py-20 bg-slate-950 text-white border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-widest mb-3">
+                <Icon name="Sparkles" className="w-4 h-4 text-indigo-400" /> Custom Industry Solutions
+              </div>
+              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+                High-Converting Websites <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Tailored For Your Industry</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {SERVICES_DATA.map((srv) => (
+                <div key={srv.id} className="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-6 transition-all hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+                        <Icon name={srv.iconName} className="w-6 h-6" />
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold uppercase">{srv.badgeText}</span>
+                    </div>
+
+                    <h3 className="text-xl font-extrabold text-white mb-2">{srv.title}</h3>
+                    <p className="text-xs font-semibold text-indigo-400 mb-3">{srv.tagline}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed mb-4">{srv.description}</p>
+
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 mb-4">
+                      <div className="text-[10px] uppercase font-bold text-slate-400 mb-2">Key Features:</div>
+                      <ul className="space-y-1 text-xs text-slate-200">
+                        {srv.features.map((feat, fIdx) => (
+                          <li key={fIdx} className="flex items-center gap-2">
+                            <Icon name="CheckCircle2" className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                    <span className="text-xs font-black text-emerald-400">{srv.conversionLift}</span>
+                    <button
+                      onClick={() => onSelectService(srv)}
+                      className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      Request Proposal
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    // --- Pricing Section ---
+    const PricingSection = ({ onOpenProposal }) => {
+      const [currency, setCurrency] = useState('INR');
+      const [cycle, setCycle] = useState('one-time');
+
+      const plans = [
+        {
+          name: 'Starter Local',
+          tagline: 'Ideal for small local service businesses',
+          priceINR: cycle === 'one-time' ? '₹5,000' : '₹999/mo',
+          priceUSD: cycle === 'one-time' ? '$55' : '$12/mo',
+          popular: false,
+          features: ['5 High-Converting 3D Custom Pages', '3D Interactive Hero Section', 'Mobile Responsive (100% Speed)', 'Basic Google Local SEO Setup', 'WhatsApp Instant Inquiry Triggers']
+        },
+        {
+          name: 'Growth 3D',
+          tagline: 'Most Popular for maximum local customer leads',
+          priceINR: cycle === 'one-time' ? '₹15,000' : '₹2,999/mo',
+          priceUSD: cycle === 'one-time' ? '$155' : '$35/mo',
+          popular: true,
+          features: ['10 High-Converting 3D Custom Pages', 'Advanced 3D Product/Service Models', 'Gemini AI Lead Assistant Bot', 'Google Maps Rank #1 Optimization', '7-Day Express Build & Delivery']
+        },
+        {
+          name: 'Enterprise AI & 3D',
+          tagline: 'Full automation & custom 3D configurators',
+          priceINR: cycle === 'one-time' ? '₹20,000' : '₹3,999/mo',
+          priceUSD: cycle === 'one-time' ? '$210' : '$49/mo',
+          popular: false,
+          features: ['Unlimited Pages & Custom Design', 'Custom 360° 3D Product Configurator', 'Full AI CRM & Appointment Automation', 'Multi-Location Google Maps SEO', 'Priority 24/7 Tech Support']
+        }
+      ];
+
+      return (
+        <section id="pricing" className="py-20 bg-[#080b11] text-white border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-widest mb-3">
+                <Icon name="Sparkles" className="w-4 h-4 text-slate-300" /> Transparent Pricing
+              </div>
+              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+                Invest in a Website That <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-zinc-400">Pays for Itself</span>
+              </h2>
+
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <div className="inline-flex p-1 rounded-2xl bg-slate-950 border border-slate-800">
+                  <button onClick={() => setCycle('one-time')} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${cycle === 'one-time' ? 'bg-white text-slate-950' : 'text-slate-400'}`}>One-Time</button>
+                  <button onClick={() => setCycle('monthly')} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${cycle === 'monthly' ? 'bg-white text-slate-950' : 'text-slate-400'}`}>Monthly</button>
+                </div>
+                <div className="inline-flex p-1 rounded-2xl bg-slate-950 border border-slate-800">
+                  <button onClick={() => setCurrency('INR')} className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${currency === 'INR' ? 'bg-slate-200 text-slate-950' : 'text-slate-400'}`}>INR (₹)</button>
+                  <button onClick={() => setCurrency('USD')} className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${currency === 'USD' ? 'bg-slate-200 text-slate-950' : 'text-slate-400'}`}>USD ($)</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {plans.map((p, idx) => (
+                <div key={idx} className={`relative rounded-3xl p-8 flex flex-col justify-between ${p.popular ? 'bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-slate-300 shadow-2xl' : 'bg-slate-950/90 border border-slate-800'}`}>
+                  {p.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-slate-100 to-slate-400 text-slate-950 text-[10px] font-black uppercase">Most Popular</div>
+                  )}
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-1">{p.name}</h3>
+                    <p className="text-xs text-slate-400 mb-6 font-medium">{p.tagline}</p>
+                    <div className="text-4xl font-black text-white mb-6 border-b border-slate-800 pb-6">{currency === 'INR' ? p.priceINR : p.priceUSD}</div>
+                    <ul className="space-y-3 mb-8 text-xs text-slate-300 font-medium">
+                      {p.features.map((f, fIdx) => (
+                        <li key={fIdx} className="flex items-center gap-2">
+                          <Icon name="Check" className="w-4 h-4 text-emerald-400" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button onClick={onOpenProposal} className="w-full py-4 rounded-2xl font-black text-xs uppercase bg-white text-slate-950 hover:bg-slate-200 transition-all cursor-pointer">Claim This Plan</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    // --- Contact Section ---
+    const ContactSection = ({ onSubmitted }) => {
+      const [formState, setFormState] = useState({ name: '', businessName: '', phone: '', email: '', message: '', budget: '$1,000 - $2,500' });
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+          await fetch('https://formsubmit.co/ajax/moahmmadkashif74@gmail.com', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              "Client Name": formState.name,
+              "Business Name": formState.businessName,
+              "Phone Number": formState.phone,
+              "Email Address": formState.email,
+              "Estimated Budget": formState.budget,
+              "Project Message": formState.message,
+              "Form Location": "Contact Us Section",
+              _subject: `📩 New Contact Form Lead: ${formState.businessName} - ${formState.name} (${formState.phone})`,
+              _cc: "mr.premsagar78@gmail.com,rk6136561@gmail.com",
+              _captcha: 'false',
+              _template: 'table'
+            })
+          });
+
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          onSubmitted(formState);
+          setFormState({ name: '', businessName: '', phone: '', email: '', message: '', budget: '$1,000 - $2,500' });
+        } catch (err) {
+          console.error(err);
+          onSubmitted(formState);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <section id="contact" className="py-20 bg-slate-900 text-white border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* Left Column */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="p-8 rounded-3xl bg-slate-950 border border-slate-800">
+                  <h3 className="text-xl font-black text-white mb-6">Quick Direct Actions</h3>
+                  <div className="space-y-4 text-xs font-bold">
+                    <a href="https://wa.me/917000073706" target="_blank" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between text-emerald-400">
+                      <span>WhatsApp #1: +91 70000 73706</span>
+                      <span>Chat &rarr;</span>
+                    </a>
+                    <a href="https://wa.me/917509624267" target="_blank" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between text-emerald-400">
+                      <span>WhatsApp #2: +91 75096 24267</span>
+                      <span>Chat &rarr;</span>
+                    </a>
+                  </div>
+
+                  <div className="mt-6 p-5 rounded-2xl bg-amber-950/40 border border-amber-500/50 space-y-2 text-xs">
+                    <div className="flex items-center gap-2 font-black text-amber-400 uppercase">
+                      <Icon name="Crown" className="w-4 h-4 text-amber-400" /> Executive Direct Team Emails
+                    </div>
+                    <div className="space-y-1 font-bold text-amber-300">
+                      <div>moahmmadkashif74@gmail.com</div>
+                      <div>mr.premsagar78@gmail.com</div>
+                      <div>masterdeveloper71@gmail.com</div>
+                      <div>rk6136561@gmail.com</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Form */}
+              <div className="lg:col-span-7 bg-slate-950 p-8 rounded-3xl border border-slate-800">
+                <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                  <h3 className="text-xl font-bold text-white mb-4">Request Your Free 3D Website Quote</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" required placeholder="Your Name *" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-white" />
+                    <input type="text" required placeholder="Business Name *" value={formState.businessName} onChange={(e) => setFormState({ ...formState, businessName: e.target.value })} className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-white" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="tel" required placeholder="Phone Number *" value={formState.phone} onChange={(e) => setFormState({ ...formState, phone: e.target.value })} className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-white" />
+                    <input type="email" required placeholder="Email Address *" value={formState.email} onChange={(e) => setFormState({ ...formState, email: e.target.value })} className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-white" />
+                  </div>
+                  <textarea rows={3} placeholder="Project Details / Goals..." value={formState.message} onChange={(e) => setFormState({ ...formState, message: e.target.value })} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-800 text-white" />
+                  <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-white text-slate-950 font-black uppercase text-sm cursor-pointer shadow-lg">
+                    {loading ? 'Sending Request...' : 'Send Message & Get Free 3D Proposal'}
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    // --- Proposal Modal ---
+    const ProposalModal = ({ isOpen, onClose, onSubmitted }) => {
+      if (!isOpen) return null;
+      const [formData, setFormData] = useState({ name: '', businessName: '', phone: '', email: '' });
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+          await fetch('https://formsubmit.co/ajax/moahmmadkashif74@gmail.com', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              "Client Name": formData.name,
+              "Business Name": formData.businessName,
+              "Phone Number": formData.phone,
+              "Email Address": formData.email,
+              "Form Location": "Free Strategy Call Modal",
+              _subject: `📅 New Call Booking: ${formData.businessName} - ${formData.name} (${formData.phone})`,
+              _cc: "mr.premsagar78@gmail.com,rk6136561@gmail.com",
+              _captcha: 'false',
+              _template: 'table'
+            })
+          });
+
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          onSubmitted(formData);
+          onClose();
+        } catch (err) {
+          console.error(err);
+          onSubmitted(formData);
+          onClose();
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl text-white">
+            <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white">
+              <Icon name="X" className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-2xl font-black mb-4">Get Free Website Proposal</h3>
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              <input type="text" required placeholder="Your Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white" />
+              <input type="text" required placeholder="Business Name *" value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white" />
+              <input type="tel" required placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white" />
+              <input type="email" required placeholder="Email Address *" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white" />
+              <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-white text-slate-950 font-black uppercase text-sm shadow-lg cursor-pointer">
+                {loading ? 'Submitting...' : 'Get Free Proposal'}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // --- Protected Inbox Modal ---
+    const InboxModal = ({ isOpen, onClose, leads, onDeleteLead, onClearAll }) => {
+      const [isUnlocked, setIsUnlocked] = useState(false);
+      const [passcode, setPasscode] = useState('');
+      const [passError, setPassError] = useState('');
+
+      if (!isOpen) return null;
+
+      const handleUnlock = (e) => {
+        e.preventDefault();
+        if (passcode.trim() === '78690') {
+          setIsUnlocked(true);
+          setPassError('');
+        } else {
+          setPassError('Incorrect Password!');
+        }
+      };
+
+      if (!isUnlocked) {
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-8 text-white space-y-6">
+              <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-white"><Icon name="X" className="w-5 h-5" /></button>
+              <div className="text-center space-y-2">
+                <Icon name="Lock" className="w-10 h-10 text-indigo-400 mx-auto" />
+                <h2 className="text-xl font-black">Protected Lead Inbox</h2>
+                <p className="text-xs text-slate-400">Enter security password (78690) to view submitted leads.</p>
+              </div>
+              <form onSubmit={handleUnlock} className="space-y-4">
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter Password..."
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-center font-mono text-white text-base tracking-widest"
+                />
+                {passError && <p className="text-xs text-rose-400 text-center font-bold">{passError}</p>}
+                <button type="submit" className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm">Unlock Inbox</button>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col bg-slate-900 border border-slate-700 rounded-3xl text-white overflow-hidden">
+            <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+              <h2 className="text-lg font-black flex items-center gap-2">
+                <Icon name="Inbox" className="w-5 h-5 text-indigo-400" /> Form Submissions ({leads.length})
+              </h2>
+              <div className="flex items-center gap-2">
+                <button onClick={onClearAll} className="px-3 py-1.5 bg-rose-500/20 text-rose-300 rounded-xl text-xs font-bold">Clear All</button>
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-white"><Icon name="X" className="w-5 h-5" /></button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {leads.length === 0 ? (
+                <p className="text-center text-xs text-slate-500 py-12">No form submissions received yet.</p>
+              ) : (
+                leads.map((l, idx) => (
+                  <div key={idx} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-white">{l.name} ({l.businessName})</span>
+                      <button onClick={() => onDeleteLead(idx)} className="text-rose-400 hover:underline">Delete</button>
+                    </div>
+                    <div className="text-emerald-400 font-mono">Phone: {l.phone}</div>
+                    <div className="text-slate-400">Email: {l.email}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- Footer ---
+    const Footer = () => (
+      <footer className="py-12 bg-slate-950 text-slate-400 text-xs border-t border-slate-800 text-center space-y-4">
+        <div className="flex items-center justify-center gap-2 text-white font-black text-lg">
+          <Icon name="Box" className="w-5 h-5 text-indigo-400" /> AETHER3D WEB STUDIO
+        </div>
+        <p>© 2026 Aether3D Web Studio. All rights reserved. High-Converting 3D Websites for Businesses.</p>
+        <div className="flex justify-center gap-6 font-bold text-slate-300">
+          <a href="mailto:moahmmadkashif74@gmail.com">moahmmadkashif74@gmail.com</a>
+          <a href="tel:+917000073706">+91 70000 73706</a>
+          <a href="tel:+917509624267">+91 75096 24267</a>
+        </div>
+      </footer>
+    );
+
+    // --- Main App Component ---
+    const App = () => {
+      const [proposalOpen, setProposalOpen] = useState(false);
+      const [inboxOpen, setInboxOpen] = useState(false);
+      const [toast, setToast] = useState({ show: false, title: '', message: '', email: '' });
+      const [savedLeads, setSavedLeads] = useState([]);
+
+      const handleFormSubmitted = (data) => {
+        setSavedLeads((prev) => [data, ...prev]);
+        setToast({
+          show: true,
+          title: 'Proposal Request Confirmed!',
+          message: `Thank you, ${data.name || 'there'}! Your website proposal request for ${data.businessName || 'your business'} was successfully received.`,
+          email: data.email
+        });
+      };
+
+      return (
+        <div className="min-h-screen bg-[#080b11]">
+          <Header
+            onOpenProposal={() => setProposalOpen(true)}
+            onOpenInbox={() => setInboxOpen(true)}
+            leadCount={savedLeads.length}
+          />
+
+          <HeroSection
+            onOpenProposal={() => setProposalOpen(true)}
+            onFormSubmitted={handleFormSubmitted}
+          />
+
+          <ServicesGrid onSelectService={() => setProposalOpen(true)} />
+
+          <PricingSection onOpenProposal={() => setProposalOpen(true)} />
+
+          <ContactSection onSubmitted={handleFormSubmitted} />
+
+          <Footer />
+
+          <ProposalModal
+            isOpen={proposalOpen}
+            onClose={() => setProposalOpen(false)}
+            onSubmitted={handleFormSubmitted}
+          />
+
+          <InboxModal
+            isOpen={inboxOpen}
+            onClose={() => setInboxOpen(false)}
+            leads={savedLeads}
+            onDeleteLead={(idx) => setSavedLeads((prev) => prev.filter((_, i) => i !== idx))}
+            onClearAll={() => setSavedLeads([])}
+          />
+
+          <ToastNotification
+            show={toast.show}
+            onClose={() => setToast({ ...toast, show: false })}
+            title={toast.title}
+            message={toast.message}
+            email={toast.email}
+          />
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
